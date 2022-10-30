@@ -14,7 +14,8 @@ Since the method requires access to the probability density function (or somethi
 proportional to it), we call it **DRCR** for 
 "**D**ensity-guided **R**ectangular **C**redible **R**egion".
 
-For a more detailed explanation, see [this notebook]().
+For a more detailed explanation, see 
+[this notebook](https://github.com/FabianKP/rectangular_credible_region/blob/main/details.ipynb).
 
 
 Installation
@@ -38,5 +39,8 @@ lb, ub, theta_est = drcr(theta, samples, neg_log_dens, x_mode)
 # The rectangular credible region is now given by {x : lb <= x <= ub},
 # and it contains theta_est*100 % of the samples.
 ```
+
+For an extensive usage example with discussion, see the 
+[demo notebook](https://github.com/FabianKP/rectangular_credible_region/blob/main/demo.ipynb).
 
 
