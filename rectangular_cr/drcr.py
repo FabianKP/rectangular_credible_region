@@ -6,10 +6,10 @@ import numpy as np
 from typing import Union
 
 
-def drcr(theta: float, samples: np.array, g: Union[callable, np.array], mode: np.array,
-                    max_iter: int = 1000, verbose: bool = True):
+def drcr(theta: float, samples: np.array, g: Union[callable, np.array], mode: np.array, transform: callable = None,
+         max_iter: int = 1000, verbose: bool = True):
     """
-    Computes a rectangular simultaneous credible region using samples from a unimodal probability distribution p(x).
+    Computes *filtered* density-guided credible regions.
 
     Parameters
     ----------
@@ -18,6 +18,8 @@ def drcr(theta: float, samples: np.array, g: Union[callable, np.array], mode: np
         the samples.
     samples : shape (n, d)
         The d-dimensional samples, stacked row-wise.
+    filter : callable
+        The filter as function. Should take arrays of shape (d, ) as input and map them to arrays of shape (m, ).
     g : callable or np.array of shape (n, ).
         Either a  function g such that the target probability density is proportional to exp(-g(x)), or
         a numpy-vector of the pre-computed values of g. If a function is provided, it should
@@ -25,6 +27,9 @@ def drcr(theta: float, samples: np.array, g: Union[callable, np.array], mode: np
         - np.inf < y <= np.inf.
     mode : shape (d, )
         The mode (i.e. maximizer) of p.
+    transform: optional, callable
+        The user has the option to provide a function that takes arrays of shape (d, ) as arguments and output arrays
+        of shape (m, ).  The credible region is then computed for the transformed samples.
     max_iter: optional, int
         Maximum number of bisection steps.
     verbose : bool
@@ -32,10 +37,12 @@ def drcr(theta: float, samples: np.array, g: Union[callable, np.array], mode: np
 
     Returns
     -------
-    lb : shape (d, )
-        The lower bound of the simultaneous credible region.
-    ub : shape (d, )
-        The upper bound of the simultaneous credible region.
+    lb : shape (m, )
+        The lower bound of the simultaneous credible region. If `transform = None`, then m=d. Otherwise, `m` is
+        the dimension of the output of the transform.
+    ub : shape (m, )
+        The upper bound of the simultaneous credible region. If `transform = None`, then m=d. Otherwise, `m` is
+        the dimension of the output of the transform.
     theta_est : float
         The achieved credibility level, i.e. the number of samples inside the estimated interval divided by
         the overall number of samples.
@@ -61,6 +68,9 @@ def drcr(theta: float, samples: np.array, g: Union[callable, np.array], mode: np
     # Sort in ascending g-order. Because we sorted wrt distance, ties are decided by the distance to the mode.
     g_order = np.argsort(g_vals)
     samples_sorted = samples_sorted[g_order]
+    # If a transform is provided, the samples are transformed.
+    if transform is not None:
+        samples_sorted = [transform(x) for x in samples_sorted]
     # Compute smallest axis-aligned box that contains the first n_theta samples.
     n_theta = np.ceil(theta * n).astype(int)
     box = smallest_bounding_box(samples_sorted[:n_theta])
